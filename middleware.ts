@@ -1,13 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Routes that require authentication
 const PROTECTED_ROUTES = ["/studies/submit", "/profile"];
-
-// Routes that require admin role
 const ADMIN_ROUTES = ["/admin"];
-
-// Routes that require faculty or admin role
 const FACULTY_ROUTES = ["/admin/submissions"];
 
 export async function middleware(request: NextRequest) {
@@ -21,7 +16,7 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
@@ -34,14 +29,12 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session — IMPORTANT: do not remove this
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
 
-  // Redirect unauthenticated users away from protected routes
   const isProtected = PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
   const isAdmin = ADMIN_ROUTES.some((r) => pathname.startsWith(r));
 
@@ -52,7 +45,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Role-based guard for admin routes
   if (isAdmin && user) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -64,7 +56,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // Stricter: pure admin-only paths
     const isAdminOnly = ["/admin/users", "/admin/categories"].some((r) =>
       pathname.startsWith(r)
     );

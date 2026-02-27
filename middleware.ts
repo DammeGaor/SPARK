@@ -1,9 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED_ROUTES = ["/studies/submit", "/profile"];
+// Only these routes are accessible without being logged in
+const PUBLIC_ROUTES = ["/login", "/register", "/terms", "/auth"];
+
 const ADMIN_ROUTES = ["/admin"];
-const FACULTY_ROUTES = ["/admin/submissions"];
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -35,17 +36,21 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  const isProtected = PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
-  const isAdmin = ADMIN_ROUTES.some((r) => pathname.startsWith(r));
+  // Allow public routes through without auth
+  const isPublic = PUBLIC_ROUTES.some((r) => pathname.startsWith(r));
+  if (isPublic) return supabaseResponse;
 
-  if ((isProtected || isAdmin) && !user) {
+  // All other routes require login
+  if (!user) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     redirectUrl.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (isAdmin && user) {
+  // Admin route role checks
+  const isAdminRoute = ADMIN_ROUTES.some((r) => pathname.startsWith(r));
+  if (isAdminRoute) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -56,11 +61,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
-    const isAdminOnly = ["/admin/users", "/admin/categories"].some((r) =>
+    const isAdminOnly = ["/admin/users", "/admin/categories", "/admin/studies"].some((r) =>
       pathname.startsWith(r)
     );
     if (isAdminOnly && profile.role !== "admin") {
-      return NextResponse.redirect(new URL("/admin", request.url));
+      return NextResponse.redirect(new URL("/admin/submissions", request.url));
     }
   }
 

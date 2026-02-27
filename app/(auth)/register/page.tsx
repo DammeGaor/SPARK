@@ -274,6 +274,11 @@ export default function RegisterPage() {
           text-upgreen-700 text-sm font-medium transition-all duration-150">
         Sign in instead
       </Link>
+
+      <p className="mt-6 text-center text-xs text-maroon-400">
+        By creating an account, you agree to our{" "}
+        <Link href="/terms?from=/register" className="underline hover:text-maroon-700">terms of use</Link>.
+      </p>
     </div>
   );
 }

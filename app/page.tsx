@@ -53,7 +53,35 @@ export default async function HomePage() {
   const { studies, authors, profile } = await getPageData();
 
   return (
-    <div className="min-h-screen bg-parchment-50 flex flex-col">
+    <div className="min-h-screen bg-parchment-50 flex flex-col relative">
+
+      {/* ── Full-page background ── */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+        {/* Maroon glow — top left corner */}
+        <div className="absolute -top-48 -left-48 w-[700px] h-[700px] rounded-full"
+          style={{ background: "radial-gradient(circle, #6b0f2416 0%, transparent 65%)" }} />
+        {/* Green glow — bottom right corner */}
+        <div className="absolute -bottom-48 -right-48 w-[700px] h-[700px] rounded-full"
+          style={{ background: "radial-gradient(circle, #2E7D3216 0%, transparent 65%)" }} />
+        {/* Secondary smaller maroon — top right, very faint */}
+        <div className="absolute -top-24 -right-24 w-[380px] h-[380px] rounded-full"
+          style={{ background: "radial-gradient(circle, #6b0f240d 0%, transparent 65%)" }} />
+        {/* Secondary smaller green — bottom left, very faint */}
+        <div className="absolute -bottom-24 -left-24 w-[380px] h-[380px] rounded-full"
+          style={{ background: "radial-gradient(circle, #2E7D320d 0%, transparent 65%)" }} />
+        {/* Fine dot grid */}
+        <div className="absolute inset-0"
+          style={{
+            backgroundImage: "radial-gradient(circle, #6b0f240f 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }} />
+        {/* Top hairline gradient */}
+        <div className="absolute top-0 left-0 right-0 h-px"
+          style={{ background: "linear-gradient(90deg, transparent 0%, #6b0f2428 35%, #2E7D3228 65%, transparent 100%)" }} />
+        {/* Bottom hairline gradient */}
+        <div className="absolute bottom-0 left-0 right-0 h-px"
+          style={{ background: "linear-gradient(90deg, transparent 0%, #2E7D3228 35%, #6b0f2428 65%, transparent 100%)" }} />
+      </div>
 
       {/* ── Navbar ── */}
       <header className="sticky top-0 z-50 bg-parchment-50/90 backdrop-blur-md border-b border-maroon-100">
@@ -103,25 +131,7 @@ export default async function HomePage() {
       </header>
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden pt-20 pb-16 px-6">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-maroon-200 to-transparent" />
-          <div
-            className="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full opacity-5"
-            style={{ background: "radial-gradient(circle, #8f1535, transparent 70%)" }}
-          />
-          <div
-            className="absolute top-1/2 -left-20 w-[300px] h-[300px] rounded-full opacity-5"
-            style={{ background: "radial-gradient(circle, #2E7D32, transparent 70%)" }}
-          />
-          <div className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: "radial-gradient(circle at 1px 1px, #8f1535 1px, transparent 0)",
-              backgroundSize: "28px 28px",
-            }}
-          />
-        </div>
-
+      <section className="relative z-10 overflow-hidden pt-20 pb-16 px-6">
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <h1 className="font-serif mb-4">
             <span
@@ -144,7 +154,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── Stats strip ── */}
-      <section className="border-y border-maroon-100 bg-white py-5">
+      <section className="relative z-10 border-y border-maroon-100 bg-white/70 backdrop-blur-sm py-5">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-center gap-12">
           <div className="text-center">
             <p className="font-serif text-3xl font-bold text-maroon-800">{studies}+</p>
@@ -164,7 +174,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── Discover Sources ── */}
-      <section className="max-w-6xl mx-auto px-6 py-16 w-full">
+      <section className="relative z-10 max-w-6xl mx-auto px-6 py-16 w-full">
         <div className="flex items-end justify-between mb-8">
           <div>
             <p className="text-xs text-maroon-400 tracking-widest uppercase mb-2">Explore by Field</p>
@@ -217,7 +227,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── CTA Banner ── */}
-      <section className="max-w-6xl mx-auto px-6 pb-16 w-full">
+      <section className="relative z-10 max-w-6xl mx-auto px-6 pb-16 w-full">
         <div
           className="relative rounded-2xl overflow-hidden p-8 sm:p-10"
           style={{ background: "linear-gradient(135deg, #6b0f24 0%, #8f1535 50%, #5a0c1c 100%)" }}
@@ -258,14 +268,14 @@ export default async function HomePage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="mt-auto border-t border-maroon-100 bg-white">
+      <footer className="relative z-10 mt-auto border-t border-maroon-100 bg-white/80 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-maroon-400">
             An Undergraduate Special Problem by{" "}
             <span className="text-maroon-600 font-medium">Sheyn Jenelle E. Briones</span>
           </p>
           <div className="flex items-center gap-4">
-            <Link href="/terms" className="text-xs text-maroon-400 hover:text-maroon-700 transition-colors">Terms of Use</Link>
+            <Link href="/terms?from=/" className="text-xs text-maroon-400 hover:text-maroon-700 transition-colors">Terms of Use</Link>
             <div className="flex items-center gap-1.5 opacity-40">
               <div className="w-2 h-2 rounded-full bg-maroon-600" />
               <div className="w-2 h-2 rounded-full bg-upgreen-600" />

@@ -173,7 +173,7 @@ export default function ProfileClient({ profile, submissionsCount, publishedCoun
     <div className="min-h-screen bg-parchment-50">
 
       {/* Header */}
-      <div className="border-b border-maroon-100 bg-white sticky top-0 z-10">
+      <div className="border-b border-maroon-100 bg-white sticky top-0 z-50">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center group">

@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { ArrowLeft, BookOpen, Shield, Users, FileText, AlertTriangle, Mail } from "lucide-react";
 
-export default function TermsPage() {
+export default function TermsPage({
+  searchParams,
+}: {
+  searchParams: { from?: string };
+}) {
   const lastUpdated = "February 2026";
+  const backHref = searchParams?.from ?? "/";
 
   const sections = [
     {
@@ -41,20 +46,16 @@ export default function TermsPage() {
     <div className="min-h-screen bg-parchment-50">
 
       {/* Header */}
-      <div className="border-b border-maroon-100 bg-white sticky top-0 z-10">
+      <div className="border-b border-maroon-100 bg-white sticky top-0 z-50">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #8f1535, #6b0f24)" }}>
-              <span className="text-parchment-100 font-serif font-bold text-xs">SP</span>
-            </div>
-            <span className="font-serif text-maroon-800 font-semibold">SPARK</span>
-          </div>
+          <Link href="/" className="flex items-center">
+            <img src="/spark-logo.svg" alt="SPARK" className="h-9 w-auto" />
+          </Link>
           <Link
-            href="/login"
+            href={backHref}
             className="inline-flex items-center gap-2 text-sm text-maroon-500 hover:text-maroon-800 transition-colors"
           >
-            <ArrowLeft size={14} /> Back to Sign In
+            <ArrowLeft size={14} /> Back
           </Link>
         </div>
       </div>
@@ -129,18 +130,12 @@ export default function TermsPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-10 pt-8 border-t border-maroon-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-10 pt-8 border-t border-maroon-100 flex items-center justify-center">
           <div className="flex items-center gap-2 opacity-50">
             <div className="w-2.5 h-2.5 rounded-full bg-maroon-600" />
             <div className="w-2.5 h-2.5 rounded-full bg-upgreen-600" />
             <span className="text-xs text-maroon-600 tracking-widest uppercase ml-1">University of the Philippines</span>
           </div>
-          <Link
-            href="/login"
-            className="text-xs text-maroon-400 hover:text-maroon-700 transition-colors"
-          >
-            Return to SPARK →
-          </Link>
         </div>
       </div>
     </div>

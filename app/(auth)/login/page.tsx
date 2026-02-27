@@ -152,7 +152,7 @@ function LoginForm() {
 
       <p className="mt-6 text-center text-xs text-maroon-400">
         By signing in, you agree to your institution's{" "}
-        <Link href="/terms" className="underline hover:text-maroon-700">terms of use</Link>.
+        <Link href="/terms?from=/login" className="underline hover:text-maroon-700">terms of use</Link>.
       </p>
     </div>
   );

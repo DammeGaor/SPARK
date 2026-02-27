@@ -14,14 +14,14 @@ interface Study {
   title: string;
   abstract: string;
   adviser: string;
-  course: string;
-  department: string;
+  course: string | null;        
+  department: string | null;    
   keywords: string[];
   date_completed: string;
   submitted_at: string;
   file_url: string | null;
   file_name: string | null;
-  status: string;
+  status: "pending" | "approved" | "rejected" | "revision_requested";  // ← was string
   author: { full_name: string; email: string; student_id: string | null } | null;
   category: { name: string; color: string } | null;
 }
@@ -163,7 +163,7 @@ export default function ValidationCard({ study, validatorId }: Props) {
                 <BookOpen size={11} />
                 Adviser: {study.adviser}
               </span>
-              <span>{study.course} · {study.department}</span>
+              <span>{study.course ?? "—"} · {study.department ?? "—"}</span>
             </div>
           </div>
 

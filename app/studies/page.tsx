@@ -168,7 +168,7 @@ export default async function StudiesPage({
       {/* Catalog */}
       <div className="flex-1 max-w-6xl mx-auto w-full px-6 py-8">
         <CatalogClient
-          studies={studies ?? []}
+          studies={(studies ?? []) as any}
           categories={categories ?? []}
           years={years as string[]}
           initialQuery={sp.query ?? ""}

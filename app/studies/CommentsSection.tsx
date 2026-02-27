@@ -61,7 +61,7 @@ function CommentItem({ comment, currentUserId, currentUserName, currentUserRole,
     const supabase = createClient();
     const { error } = await supabase.from("comments").insert({
       study_id: studyId, user_id: currentUserId, body: replyText.trim(), parent_id: comment.id,
-    });
+    } as any);
     if (error) toast.error("Failed to post reply.");
     else { toast.success("Reply posted."); setReplyText(""); setReplying(false); onRefresh(); }
     setSubmitting(false);
@@ -155,7 +155,7 @@ export default function CommentsSection({ studyId, currentUserId, currentUserNam
     const supabase = createClient();
     const { error } = await supabase.from("comments").insert({
       study_id: studyId, user_id: currentUserId, body: newComment.trim(), parent_id: null,
-    });
+    } as any);
     if (error) toast.error("Failed to post comment.");
     else { toast.success("Comment posted."); setNewComment(""); refresh(); }
     setSubmitting(false);

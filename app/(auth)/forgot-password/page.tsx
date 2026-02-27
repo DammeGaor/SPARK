@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +14,7 @@ const schema = z.object({
 });
 type Input = z.infer<typeof schema>;
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
     const supabase = createClient();
 
     const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
     });
 
     if (error) {
@@ -46,12 +46,15 @@ export default function ForgotPasswordPage() {
         <div className="w-16 h-16 rounded-full bg-upgreen-100 flex items-center justify-center mx-auto mb-5">
           <CheckCircle2 size={32} className="text-upgreen-600" />
         </div>
-        <h1 className="font-serif text-2xl text-maroon-800 mb-2">Email sent</h1>
+        <h1 className="font-serif text-2xl text-maroon-800 mb-2">Check your email</h1>
         <p className="text-maroon-500 text-sm mb-6 leading-relaxed">
           If that email is registered, you will receive a password reset link shortly.
+          Check your spam folder if you don't see it within a few minutes.
         </p>
-        <Link href="/login"
-          className="inline-flex items-center gap-2 text-sm text-maroon-600 hover:text-maroon-900 transition-colors">
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-2 text-sm text-maroon-600 hover:text-maroon-900 transition-colors"
+        >
           <ArrowLeft size={14} /> Back to Sign In
         </Link>
       </div>
@@ -89,7 +92,7 @@ export default function ForgotPasswordPage() {
           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
             text-parchment-50 text-sm font-medium
             transition-all disabled:opacity-60 shadow-sm hover:shadow-md"
-          style={{ background: "linear-gradient(135deg, #8f1535 0%, #6b0f24 100%)" }}
+          style={{ background: isLoading ? "#a01c3a" : "linear-gradient(135deg, #8f1535 0%, #6b0f24 100%)" }}
         >
           {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
           {isLoading ? "Sending..." : "Send reset link"}
@@ -97,11 +100,21 @@ export default function ForgotPasswordPage() {
       </form>
 
       <div className="mt-6 text-center">
-        <Link href="/login"
-          className="inline-flex items-center gap-2 text-sm text-maroon-500 hover:text-maroon-800 transition-colors">
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-2 text-sm text-maroon-500 hover:text-maroon-800 transition-colors"
+        >
           <ArrowLeft size={14} /> Back to Sign In
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={<div />}>
+      <ForgotPasswordForm />
+    </Suspense>
   );
 }

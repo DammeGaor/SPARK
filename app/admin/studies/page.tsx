@@ -70,7 +70,7 @@ export default async function StudiesPage() {
       </div>
 
       {/* Table */}
-      <StudiesTable studies={all} />
+      <StudiesTable studies={all as any} />
     </div>
   );
 }

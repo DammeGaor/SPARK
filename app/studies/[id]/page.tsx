@@ -10,7 +10,8 @@ import NavbarUserMenu from "@/components/NavbarUserMenu";
 import CommentsSection from "../CommentsSection";
 import CitationCopy from "../CitationCopy";
 
-export default async function StudyPage({ params }: { params: { id: string } }) {
+export default async function StudyPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -29,7 +30,7 @@ export default async function StudyPage({ params }: { params: { id: string } }) 
       author:profiles!studies_author_id_fkey(full_name, department),
       category:categories(name, color)
     `)
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("is_published", true)
     .single();
 
@@ -38,7 +39,7 @@ export default async function StudyPage({ params }: { params: { id: string } }) 
   const { data: commentsData } = await supabase
     .from("comments")
     .select(`id, body, created_at, parent_id, author:profiles!comments_user_id_fkey(id, full_name)`)
-    .eq("study_id", params.id)
+    .eq("study_id", id)
     .order("created_at", { ascending: true });
 
   const { data: related } = await supabase

@@ -15,7 +15,7 @@ interface Study {
   adviser: string;
   course: string;
   department: string;
-  status: string;
+  status: "pending" | "approved" | "rejected" | "revision_requested";
   is_published: boolean;
   submitted_at: string;
   published_at: string | null;

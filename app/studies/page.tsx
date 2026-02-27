@@ -16,8 +16,9 @@ interface SearchParams {
 export default async function StudiesPage({
   searchParams,
 }: {
-  searchParams: SearchParams;
+  searchParams: Promise<SearchParams>;
 }) {
+  const sp = await searchParams;
   const supabase = await createClient();
 
   // Fetch user profile for navbar
@@ -51,30 +52,30 @@ export default async function StudiesPage({
     .eq("is_published", true);
 
   // Search
-  if (searchParams.query) {
+  if (sp.query) {
     query = query.or(
-      `title.ilike.%${searchParams.query}%,abstract.ilike.%${searchParams.query}%,adviser.ilike.%${searchParams.query}%`
+      `title.ilike.%${sp.query}%,abstract.ilike.%${sp.query}%,adviser.ilike.%${sp.query}%`
     );
   }
 
   // Category filter
-  if (searchParams.category) {
+  if (sp.category) {
     const cat = categories?.find(
-      (c) => c.name.toLowerCase().replace(/\s+/g, "-") === searchParams.category
+      (c) => c.name.toLowerCase().replace(/\s+/g, "-") === sp.category
     );
     if (cat) query = query.eq("category_id", cat.id);
   }
 
   // Year filters
-  if (searchParams.year_from) {
-    query = query.gte("date_completed", `${searchParams.year_from}-01-01`);
+  if (sp.year_from) {
+    query = query.gte("date_completed", `${sp.year_from}-01-01`);
   }
-  if (searchParams.year_to) {
-    query = query.lte("date_completed", `${searchParams.year_to}-12-31`);
+  if (sp.year_to) {
+    query = query.lte("date_completed", `${sp.year_to}-12-31`);
   }
 
   // Sort
-  const sort = searchParams.sort ?? "date_desc";
+  const sort = sp.sort ?? "date_desc";
   if (sort === "date_asc") {
     query = query.order("published_at", { ascending: true });
   } else {
@@ -170,11 +171,11 @@ export default async function StudiesPage({
           studies={studies ?? []}
           categories={categories ?? []}
           years={years as string[]}
-          initialQuery={searchParams.query ?? ""}
-          initialCategory={searchParams.category ?? ""}
-          initialYearFrom={searchParams.year_from ?? ""}
-          initialYearTo={searchParams.year_to ?? ""}
-          initialSort={searchParams.sort ?? "date_desc"}
+          initialQuery={sp.query ?? ""}
+          initialCategory={sp.category ?? ""}
+          initialYearFrom={sp.year_from ?? ""}
+          initialYearTo={sp.year_to ?? ""}
+          initialSort={sp.sort ?? "date_desc"}
         />
       </div>
 

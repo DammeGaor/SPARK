@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { ArrowLeft, BookOpen, Shield, Users, FileText, AlertTriangle, Mail } from "lucide-react";
 
-export default function TermsPage({
+export default async function TermsPage({
   searchParams,
 }: {
-  searchParams: { from?: string };
+  searchParams: Promise<{ from?: string }>;
 }) {
   const lastUpdated = "February 2026";
-  const backHref = searchParams?.from ?? "/";
+  const sp = await searchParams;
+  const backHref = sp?.from ?? "/";
 
   const sections = [
     {

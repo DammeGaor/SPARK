@@ -29,8 +29,8 @@ interface Study {
   file_url: string | null;
   file_name: string | null;
   adviser: string;
-  course: string;
-  department: string;
+  course: string | null;
+  department: string | null;
   keywords: string[];
   category: { name: string; color: string } | null;
   validations: Validation[];

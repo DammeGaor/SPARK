@@ -13,8 +13,8 @@ interface Study {
   id: string;
   title: string;
   adviser: string;
-  course: string;
-  department: string;
+  course: string | null;
+  department: string | null;
   status: "pending" | "approved" | "rejected" | "revision_requested";
   is_published: boolean;
   submitted_at: string;

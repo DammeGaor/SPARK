@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -56,15 +57,15 @@ export default function AdminSidebar({ role, fullName, email }: Props) {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-maroon-800/30">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-parchment-300/20"
-            style={{ background: "rgba(250,243,224,0.1)" }}>
-            <span className="text-parchment-200 font-serif font-bold text-xs">SP</span>
-          </div>
-          <div>
-            <p className="text-parchment-100 font-serif font-bold text-sm leading-none">SPARK</p>
-            <p className="text-parchment-500 text-[10px] leading-tight mt-0.5">Admin Panel</p>
-          </div>
+        <Link href="/" className="flex flex-col gap-1 group">
+          <Image
+            src="/spark-logo-dark.svg"
+            alt="SPARK"
+            width={140}
+            height={44}
+            priority
+          />
+          <p className="text-parchment-500 text-[10px] tracking-widest uppercase ml-0.5">Admin Panel</p>
         </Link>
       </div>
 

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 100" width="320" height="100">
+  <defs>
+    <linearGradient id="maroonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8f1535;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6b0f24;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2e7d32;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1b5e20;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#6b0f24" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Icon mark: open book / spark shape -->
+  <g transform="translate(8, 10)">
+    <!-- Book base -->
+    <rect x="0" y="18" width="36" height="52" rx="4" fill="url(#maroonGrad)" filter="url(#shadow)"/>
+    <!-- Book spine highlight -->
+    <rect x="0" y="18" width="5" height="52" rx="2" fill="#6b0f24"/>
+    <!-- Pages -->
+    <rect x="6" y="22" width="26" height="3" rx="1.5" fill="#faf3e0" opacity="0.6"/>
+    <rect x="6" y="29" width="20" height="3" rx="1.5" fill="#faf3e0" opacity="0.6"/>
+    <rect x="6" y="36" width="23" height="3" rx="1.5" fill="#faf3e0" opacity="0.6"/>
+    <rect x="6" y="43" width="16" height="3" rx="1.5" fill="#faf3e0" opacity="0.6"/>
+
+    <!-- Spark / lightning bolt accent -->
+    <polygon points="28,14 20,32 26,32 18,52 34,28 27,28" fill="url(#greenGrad)" filter="url(#shadow)"/>
+    <!-- Spark highlight -->
+    <polygon points="28,14 22,28 26,28 21,40 31,24 27,24" fill="#4caf50" opacity="0.4"/>
+  </g>
+
+  <!-- Wordmark -->
+  <g transform="translate(62, 0)">
+    <!-- SPARK -->
+    <text
+      x="0" y="58"
+      font-family="Georgia, 'Times New Roman', serif"
+      font-size="46"
+      font-weight="700"
+      letter-spacing="4"
+      fill="url(#maroonGrad)"
+    >SPARK</text>
+
+    <!-- Green underline accent -->
+    <rect x="2" y="65" width="200" height="3" rx="1.5" fill="url(#greenGrad)"/>
+
+    <!-- Subtitle -->
+    <text
+      x="2" y="84"
+      font-family="Georgia, 'Times New Roman', serif"
+      font-size="9.5"
+      letter-spacing="2.5"
+      fill="#8f1535"
+      opacity="0.75"
+    >SPECIAL PROBLEMS ARCHIVE</text>
+  </g>
+</svg>

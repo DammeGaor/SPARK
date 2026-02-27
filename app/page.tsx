@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { GraduationCap, FlaskConical, Cpu, Globe, ArrowRight, Upload, BookMarked } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -57,14 +58,14 @@ export default async function HomePage() {
       {/* ── Navbar ── */}
       <header className="sticky top-0 z-50 bg-parchment-50/90 backdrop-blur-md border-b border-maroon-100">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow"
-              style={{ background: "linear-gradient(135deg, #8f1535, #6b0f24)" }}
-            >
-              <span className="text-parchment-100 font-serif font-bold text-xs">SP</span>
-            </div>
-            <span className="font-serif font-bold text-maroon-800 text-lg tracking-tight">SPARK</span>
+          <Link href="/" className="flex items-center group">
+            <Image
+              src="/spark-logo.svg"
+              alt="SPARK"
+              width={160}
+              height={50}
+              priority
+            />
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">

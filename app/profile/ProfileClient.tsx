@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -175,12 +176,14 @@ export default function ProfileClient({ profile, submissionsCount, publishedCoun
       <div className="border-b border-maroon-100 bg-white sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #8f1535, #6b0f24)" }}>
-                <span className="text-parchment-100 font-serif font-bold text-xs">SP</span>
-              </div>
-              <span className="font-serif font-bold text-maroon-800 text-base">SPARK</span>
+            <Link href="/" className="flex items-center group">
+              <Image
+                src="/spark-logo.svg"
+                alt="SPARK"
+                width={120}
+                height={38}
+                priority
+              />
             </Link>
             <ChevronRight size={14} className="text-maroon-300" />
             <span className="text-sm text-maroon-500 font-medium">Profile</span>

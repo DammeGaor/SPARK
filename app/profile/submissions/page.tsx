@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -32,11 +33,13 @@ export default async function SubmissionsPage() {
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #8f1535, #6b0f24)" }}>
-                <span className="text-parchment-100 font-serif font-bold text-xs">SP</span>
-              </div>
-              <span className="font-serif font-bold text-maroon-800 text-base">SPARK</span>
+              <Image
+                src="/spark-logo.svg"
+                alt="SPARK"
+                width={120}
+                height={38}
+                priority
+              />
             </Link>
             <ChevronRight size={14} className="text-maroon-300" />
             <span className="text-sm text-maroon-500 font-medium">My Submissions</span>

@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function AuthLayout({
   children,
 }: {
@@ -27,21 +29,15 @@ export default function AuthLayout({
         <div className="absolute bottom-1/4 right-0 w-60 h-60 rounded-full blur-[80px]"
           style={{ background: "rgba(46, 125, 50, 0.2)" }} />
 
-        {/* Logo / Wordmark */}
+        {/* Logo — dark variant for maroon background */}
         <div className="relative z-10">
-          <div className="flex items-center gap-3">
-            {/* Placeholder logo box */}
-            <div className="w-10 h-10 rounded-lg border-2 border-parchment-300 flex items-center justify-center"
-              style={{ background: "rgba(250, 243, 224, 0.1)" }}>
-              <span className="text-parchment-200 font-serif font-bold text-sm">SP</span>
-            </div>
-            <div>
-              <p className="text-parchment-100 font-serif text-xl font-bold tracking-wide leading-none">SPARK</p>
-              <p className="text-parchment-400 text-[10px] tracking-widest uppercase leading-tight mt-0.5">
-                Special Problems Archive for Research and Knowledge
-              </p>
-            </div>
-          </div>
+          <Image
+            src="/spark-logo-dark.svg"
+            alt="SPARK"
+            width={220}
+            height={70}
+            priority
+          />
         </div>
 
         {/* Center content */}
@@ -69,12 +65,14 @@ export default function AuthLayout({
 
         {/* Mobile header */}
         <div className="lg:hidden mb-10 text-center">
-          <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center border-2 border-maroon-600"
-            style={{ background: "linear-gradient(135deg, #8f1535, #6b0f24)" }}>
-            <span className="text-parchment-100 font-serif font-bold">SP</span>
-          </div>
-          <p className="text-maroon-800 font-serif text-lg font-semibold">SPARK</p>
-          <p className="text-maroon-400 text-xs tracking-wider uppercase">Special Problems Archive for Research and Knowledge</p>
+          <Image
+            src="/spark-logo.svg"
+            alt="SPARK"
+            width={180}
+            height={56}
+            priority
+            className="mx-auto"
+          />
         </div>
 
         <div className="w-full max-w-md">{children}</div>

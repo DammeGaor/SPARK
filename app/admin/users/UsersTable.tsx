@@ -13,7 +13,7 @@ interface UserProfile {
   id: string;
   full_name: string;
   email: string;
-  role: string;
+  role: "admin" | "faculty" | "student";
   department: string | null;
   student_id: string | null;
   created_at: string;
@@ -55,16 +55,16 @@ function RoleDropdown({
   onRoleChange,
 }: {
   userId: string;
-  currentRole: string;
+  currentRole: "admin" | "faculty" | "student";
   isSelf: boolean;
-  onRoleChange: (userId: string, newRole: string) => Promise<void>;
+  onRoleChange: (userId: string, newRole: "admin" | "faculty" | "student") => Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const cfg = ROLE_CONFIG[currentRole] ?? ROLE_CONFIG.student;
   const Icon = cfg.icon;
 
-  async function handleSelect(role: string) {
+  async function handleSelect(role: "admin" | "faculty" | "student") {
     if (role === currentRole) { setOpen(false); return; }
     setOpen(false);
     setLoading(true);
@@ -108,7 +108,7 @@ function RoleDropdown({
             return (
               <button
                 key={role}
-                onClick={() => handleSelect(role)}
+                onClick={() => handleSelect(role as "admin" | "faculty" | "student")}
                 className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors
                   ${isActive ? `${config.bg} ${config.color} font-semibold` : "text-maroon-700 hover:bg-parchment-50"}`}
               >
@@ -143,7 +143,7 @@ export default function UsersTable({ users, currentUserId }: Props) {
     return matchSearch && matchRole;
   });
 
-  async function handleRoleChange(userId: string, newRole: string) {
+  async function handleRoleChange(userId: string, newRole: "admin" | "faculty" | "student") {
     const supabase = createClient();
     const { error } = await supabase
       .from("profiles")

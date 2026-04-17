@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   CheckCircle2, Clock, XCircle, RefreshCw, Eye, FileText,
   ChevronDown, ChevronUp, Trash2, ExternalLink, Tag,
-  MessageSquare, Loader2, AlertCircle, Plus,
+  MessageSquare, Loader2, Plus, Lock, Unlock, Users,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
@@ -18,12 +18,22 @@ interface Validation {
   faculty: { full_name: string } | null;
 }
 
+interface AccessRequest {
+  id: string;
+  requester_id: string;
+  status: string;
+  message: string | null;
+  created_at: string;
+  requester: { full_name: string } | null;
+}
+
 interface Study {
   id: string;
   title: string;
   abstract: string;
   status: string;
   is_published: boolean;
+  allow_download: boolean;
   submitted_at: string;
   updated_at: string;
   file_url: string | null;
@@ -34,6 +44,7 @@ interface Study {
   keywords: string[];
   category: { name: string; color: string } | null;
   validations: Validation[];
+  access_requests?: AccessRequest[];
 }
 
 const STATUS_CONFIG: Record<string, {
@@ -74,17 +85,85 @@ const STATUS_CONFIG: Record<string, {
   },
 };
 
+function AccessRequestRow({ req, studyId, onUpdate }: {
+  req: AccessRequest;
+  studyId: string;
+  onUpdate: () => void;
+}) {
+  const [loading, setLoading] = useState<"approved" | "denied" | null>(null);
+
+  async function respond(decision: "approved" | "denied") {
+    setLoading(decision);
+    try {
+      const res = await fetch("/api/respond-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestId: req.id, decision }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(decision === "approved" ? "Access granted." : "Request denied.");
+        onUpdate();
+      } else {
+        toast.error("Something went wrong.");
+      }
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  return (
+    <div className="flex items-start gap-3 py-2.5 border-b border-maroon-50 last:border-0">
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-maroon-800">{req.requester?.full_name ?? "Unknown"}</p>
+        {req.message && <p className="text-xs text-maroon-400 mt-0.5 italic">"{req.message}"</p>}
+        <p className="text-[10px] text-maroon-300 mt-0.5">
+          {new Date(req.created_at).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}
+        </p>
+      </div>
+      {req.status === "pending" ? (
+        <div className="flex gap-1.5 flex-shrink-0">
+          <button onClick={() => respond("approved")} disabled={!!loading}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-upgreen-50 border border-upgreen-200 text-xs text-upgreen-700 font-medium hover:bg-upgreen-100 transition-all disabled:opacity-50">
+            {loading === "approved" ? <Loader2 size={11} className="animate-spin" /> : <CheckCircle2 size={11} />}
+            Approve
+          </button>
+          <button onClick={() => respond("denied")} disabled={!!loading}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 border border-red-200 text-xs text-red-600 font-medium hover:bg-red-100 transition-all disabled:opacity-50">
+            {loading === "denied" ? <Loader2 size={11} className="animate-spin" /> : <XCircle size={11} />}
+            Deny
+          </button>
+        </div>
+      ) : (
+        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+          req.status === "approved"
+            ? "bg-upgreen-50 text-upgreen-700 border border-upgreen-200"
+            : "bg-red-50 text-red-600 border border-red-200"
+        }`}>
+          {req.status === "approved" ? "Approved" : "Denied"}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function SubmissionCard({ study }: { study: Study }) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
+  const [showRequests, setShowRequests] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [togglingDownload, setTogglingDownload] = useState(false);
+  const [allowDownload, setAllowDownload] = useState(study.allow_download);
+
   const statusCfg = STATUS_CONFIG[study.status] ?? STATUS_CONFIG.pending;
   const StatusIcon = statusCfg.icon;
 
-  // Get latest validation
   const latestValidation = study.validations?.sort(
     (a, b) => new Date(b.reviewed_at).getTime() - new Date(a.reviewed_at).getTime()
   )[0];
+
+  const pendingRequests = (study.access_requests ?? []).filter((r) => r.status === "pending");
+  const allRequests = study.access_requests ?? [];
 
   async function handleDelete() {
     if (!confirm(`Delete "${study.title}"? This cannot be undone.`)) return;
@@ -98,6 +177,22 @@ function SubmissionCard({ study }: { study: Study }) {
       toast.success("Study deleted.");
       router.refresh();
     }
+  }
+
+  async function toggleDownload() {
+    setTogglingDownload(true);
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("studies")
+      .update({ allow_download: !allowDownload })
+      .eq("id", study.id);
+    if (error) {
+      toast.error("Failed to update setting.");
+    } else {
+      setAllowDownload(!allowDownload);
+      toast.success(allowDownload ? "PDF is now restricted." : "PDF is now open access.");
+    }
+    setTogglingDownload(false);
   }
 
   return (
@@ -115,7 +210,6 @@ function SubmissionCard({ study }: { study: Study }) {
       </div>
 
       <div className="p-5">
-        {/* Title + meta */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
             <h3 className="font-serif text-base font-semibold text-maroon-900 leading-snug mb-1.5">
@@ -123,8 +217,7 @@ function SubmissionCard({ study }: { study: Study }) {
             </h3>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-maroon-400">
               {study.category && (
-                <span className="inline-flex items-center gap-1 font-medium"
-                  style={{ color: study.category.color }}>
+                <span className="inline-flex items-center gap-1 font-medium" style={{ color: study.category.color }}>
                   <Tag size={10} />{study.category.name}
                 </span>
               )}
@@ -136,12 +229,10 @@ function SubmissionCard({ study }: { study: Study }) {
           </div>
         </div>
 
-        {/* Status description */}
         <p className={`text-xs px-3 py-2 rounded-lg border mb-4 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color}`}>
           {statusCfg.description}
         </p>
 
-        {/* Validation notes */}
         {latestValidation?.notes && (
           <div className="mb-4 rounded-xl border border-maroon-100 bg-parchment-50 p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -162,7 +253,69 @@ function SubmissionCard({ study }: { study: Study }) {
           </div>
         )}
 
-        {/* Expanded details */}
+        {/* PDF Access Toggle — only for published studies with a file */}
+        {study.is_published && study.file_url && (
+          <div className="mb-4 rounded-xl border border-maroon-100 bg-parchment-50 p-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              {allowDownload
+                ? <Unlock size={13} className="text-upgreen-600 flex-shrink-0" />
+                : <Lock size={13} className="text-maroon-500 flex-shrink-0" />}
+              <div>
+                <p className="text-xs font-semibold text-maroon-700">
+                  {allowDownload ? "Open Access" : "Restricted Access"}
+                </p>
+                <p className="text-[10px] text-maroon-400">
+                  {allowDownload
+                    ? "Anyone can view and download the PDF."
+                    : "Viewers must request access from you."}
+                </p>
+              </div>
+            </div>
+            <button onClick={toggleDownload} disabled={togglingDownload}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all disabled:opacity-50 ${
+                allowDownload
+                  ? "border-maroon-200 text-maroon-600 hover:bg-maroon-50"
+                  : "border-upgreen-200 text-upgreen-700 hover:bg-upgreen-50"
+              }`}>
+              {togglingDownload
+                ? <Loader2 size={11} className="animate-spin" />
+                : allowDownload ? <Lock size={11} /> : <Unlock size={11} />}
+              {allowDownload ? "Restrict" : "Open"}
+            </button>
+          </div>
+        )}
+
+        {/* Access Requests Panel */}
+        {!allowDownload && allRequests.length > 0 && (
+          <div className="mb-4 rounded-xl border border-maroon-100 overflow-hidden">
+            <button onClick={() => setShowRequests(!showRequests)}
+              className="w-full flex items-center justify-between px-4 py-2.5 bg-parchment-50 hover:bg-parchment-100 transition-all">
+              <span className="flex items-center gap-2 text-xs font-semibold text-maroon-700">
+                <Users size={13} className="text-maroon-500" />
+                Access Requests
+                {pendingRequests.length > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-maroon-600 text-parchment-50 text-[10px] font-bold">
+                    {pendingRequests.length} pending
+                  </span>
+                )}
+              </span>
+              {showRequests ? <ChevronUp size={13} className="text-maroon-400" /> : <ChevronDown size={13} className="text-maroon-400" />}
+            </button>
+            {showRequests && (
+              <div className="px-4 py-2 divide-y divide-maroon-50">
+                {allRequests.map((req) => (
+                  <AccessRequestRow
+                    key={req.id}
+                    req={req}
+                    studyId={study.id}
+                    onUpdate={() => router.refresh()}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {expanded && (
           <div className="mb-4 space-y-3 pt-3 border-t border-maroon-50">
             <div>
@@ -184,9 +337,7 @@ function SubmissionCard({ study }: { study: Study }) {
           </div>
         )}
 
-        {/* Actions */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* View PDF */}
           {study.file_url && (
             <a href={study.file_url} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-maroon-200 text-xs text-maroon-600 hover:bg-maroon-50 transition-all font-medium">
@@ -196,7 +347,6 @@ function SubmissionCard({ study }: { study: Study }) {
             </a>
           )}
 
-          {/* Resubmit — only for revision_requested */}
           {study.status === "revision_requested" && (
             <Link href={`/studies/submit?resubmit=${study.id}`}
               className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-parchment-50 transition-all shadow-sm hover:shadow-md"
@@ -206,13 +356,11 @@ function SubmissionCard({ study }: { study: Study }) {
             </Link>
           )}
 
-          {/* Toggle details */}
           <button onClick={() => setExpanded(!expanded)}
             className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-maroon-200 text-xs text-maroon-500 hover:bg-maroon-50 transition-all ml-auto">
             {expanded ? <><ChevronUp size={12} /> Less</> : <><ChevronDown size={12} /> Details</>}
           </button>
 
-          {/* Delete — only for pending */}
           {study.status === "pending" && (
             <button onClick={handleDelete} disabled={deleting}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs text-red-600 hover:bg-red-50 transition-all disabled:opacity-50">
@@ -269,7 +417,6 @@ export default function SubmissionsList({ studies }: { studies: Study[] }) {
 
   return (
     <div className="space-y-5">
-      {/* Filter tabs */}
       <div className="flex gap-1.5 flex-wrap">
         {tabs.map((tab) => {
           const count = counts[tab.key as keyof typeof counts];
@@ -294,7 +441,6 @@ export default function SubmissionsList({ studies }: { studies: Study[] }) {
         })}
       </div>
 
-      {/* Cards */}
       {filtered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-maroon-100 p-10 text-center">
           <p className="text-maroon-400 text-sm">No studies in this category.</p>

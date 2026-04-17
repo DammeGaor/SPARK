@@ -4,11 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowLeft, Tag, User, Calendar, BookOpen,
-  Building2, GraduationCap, FileText, ExternalLink, ChevronRight,
+  Building2, GraduationCap, FileText, ChevronRight,
 } from "lucide-react";
 import NavbarUserMenu from "@/components/NavbarUserMenu";
 import CommentsSection from "../CommentsSection";
 import CitationCopy from "../CitationCopy";
+import ViewPDFButton from "../ViewPDFButton";
+import RequestAccessButton from "../RequestAccessButton";
 
 export default async function StudyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,8 +28,8 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
     .select(`
       id, title, abstract, adviser, course, department,
       keywords, date_completed, published_at, citation,
-      file_url, file_name, file_size_bytes,
-      author:profiles!studies_author_id_fkey(full_name, department),
+      file_url, file_name, file_size_bytes, allow_download,
+      author:profiles!studies_author_id_fkey(id, full_name, department),
       category:categories(name, color)
     `)
     .eq("id", id)
@@ -35,6 +37,30 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
     .single();
 
   if (!study) notFound();
+
+  const fileSizeMB = study.file_size_bytes ? (study.file_size_bytes / 1024 / 1024).toFixed(2) : null;
+
+  // Determine file access for the current viewer
+  const isAuthor = user?.id === (study.author as any)?.id;
+
+  // Check if user has an approved access request (only needed if download is restricted)
+  let accessRequestStatus: "none" | "pending" | "approved" | "denied" = "none";
+  if (!study.allow_download && user && !isAuthor) {
+    const { data: req } = await supabase
+      .from("study_access_requests")
+      .select("status")
+      .eq("study_id", id)
+      .eq("requester_id", user.id)
+      .single();
+    if (req) accessRequestStatus = req.status as typeof accessRequestStatus;
+  }
+
+  // Can view the PDF?
+  const canViewPDF = study.file_url && (
+    study.allow_download ||   // open access
+    isAuthor ||               // author always can
+    accessRequestStatus === "approved"  // granted access
+  );
 
   const { data: commentsData } = await supabase
     .from("comments")
@@ -48,8 +74,6 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
     .eq("is_published", true)
     .neq("id", study.id)
     .limit(3);
-
-  const fileSizeMB = study.file_size_bytes ? (study.file_size_bytes / 1024 / 1024).toFixed(2) : null;
 
   return (
     <div className="min-h-screen bg-parchment-50 flex flex-col">
@@ -100,7 +124,7 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
           )}
           <h1 className="font-serif text-2xl sm:text-3xl text-parchment-100 font-bold leading-snug mb-4">{study.title}</h1>
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-parchment-400 text-sm">
-            <span className="flex items-center gap-1.5"><User size={13} className="text-parchment-500" />{study.author?.full_name ?? "Unknown"}</span>
+            <span className="flex items-center gap-1.5"><User size={13} className="text-parchment-500" />{(study.author as any)?.full_name ?? "Unknown"}</span>
             <span className="flex items-center gap-1.5"><BookOpen size={13} className="text-parchment-500" />Adviser: {study.adviser}</span>
             <span className="flex items-center gap-1.5">
               <Calendar size={13} className="text-parchment-500" />
@@ -116,8 +140,6 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
 
           {/* Main — 2/3 */}
           <div className="lg:col-span-2 space-y-5">
-
-            {/* Abstract — overflow fixed */}
             <div className="bg-white rounded-2xl border border-maroon-100 shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-maroon-50" style={{ background: "linear-gradient(135deg, #fdf6f0, #fff)" }}>
                 <h2 className="font-serif text-base font-semibold text-maroon-800">Abstract</h2>
@@ -129,7 +151,6 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
               </div>
             </div>
 
-            {/* Keywords — no hash icon */}
             {study.keywords?.length > 0 && (
               <div className="bg-white rounded-2xl border border-maroon-100 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-maroon-50" style={{ background: "linear-gradient(135deg, #fdf6f0, #fff)" }}>
@@ -148,9 +169,7 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
               </div>
             )}
 
-            {/* Citation with copy button */}
             {study.citation && <CitationCopy citation={study.citation} />}
-
           </div>
 
           {/* Sidebar — 1/3 */}
@@ -165,14 +184,27 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-maroon-800 truncate">{study.file_name ?? "study.pdf"}</p>
-                    {fileSizeMB && <p className="text-xs text-maroon-400">{fileSizeMB} MB</p>}
+                    <div className="flex items-center gap-2">
+                      {fileSizeMB && <p className="text-xs text-maroon-400">{fileSizeMB} MB</p>}
+                      {!study.allow_download && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-maroon-100 text-maroon-500 font-medium">
+                          Restricted
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <a href={study.file_url} target="_blank" rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-parchment-50 text-sm font-medium transition-all shadow-sm hover:shadow-md"
-                  style={{ background: "linear-gradient(135deg, #8f1535, #6b0f24)" }}>
-                  <ExternalLink size={14} /> View PDF
-                </a>
+
+                {canViewPDF ? (
+                  <ViewPDFButton fileUrl={study.file_url} studyId={study.id} />
+                ) : (
+                  <RequestAccessButton
+                    studyId={study.id}
+                    studyTitle={study.title}
+                    isLoggedIn={!!user}
+                    initialStatus={accessRequestStatus}
+                  />
+                )}
               </div>
             )}
 
@@ -180,7 +212,7 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
               <h3 className="font-serif text-sm font-semibold text-maroon-800 mb-4">Details</h3>
               <div className="space-y-3">
                 {[
-                  { icon: User, label: "Author", value: study.author?.full_name },
+                  { icon: User, label: "Author", value: (study.author as any)?.full_name },
                   { icon: BookOpen, label: "Adviser", value: study.adviser },
                   { icon: GraduationCap, label: "Course", value: study.course },
                   { icon: Building2, label: "Department", value: study.department },
@@ -207,7 +239,6 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
               <ArrowLeft size={14} /> Back to Catalog
             </Link>
 
-            {/* Comments */}
             <CommentsSection
               studyId={study.id}
               currentUserId={user?.id ?? null}
@@ -232,7 +263,7 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
                     </span>
                   )}
                   <h3 className="font-serif text-sm font-semibold text-maroon-800 line-clamp-2 group-hover:text-maroon-600 transition-colors">{s.title}</h3>
-                  <p className="text-xs text-maroon-400 mt-2">{s.author?.full_name}</p>
+                  <p className="text-xs text-maroon-400 mt-2">{(s.author as any)?.full_name}</p>
                 </Link>
               ))}
             </div>

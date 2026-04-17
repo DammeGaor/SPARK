@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import {
   Upload, FileText, X, CheckCircle2, Loader2, ChevronRight,
   BookOpen, Tag, User, Calendar, Building2, GraduationCap, Hash, Link as LinkIcon, AlertCircle,
+  Lock, Globe, ShieldCheck,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -90,6 +91,7 @@ function SubmitForm() {
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [allowDownload, setAllowDownload] = useState(false); // restricted by default
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<SubmitInput>({
@@ -196,6 +198,7 @@ function SubmitForm() {
         author_id: user.id,
         status: "pending",
         is_published: false,
+        allow_download: allowDownload,
       });
 
       if (insertError) throw new Error(`Submission failed: ${insertError.message}`);
@@ -463,6 +466,94 @@ function SubmitForm() {
               <AlertCircle size={12} /> {pdfError}
             </p>
           )}
+        </Section>
+
+        {/* PDF Access */}
+        <Section icon={Lock} title="PDF Access">
+          <p className="text-xs text-maroon-400 -mt-1 leading-relaxed">
+            Choose who can access the full PDF of your study once it's approved and published.
+            You can change this at any time from your submissions dashboard.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Restricted */}
+            <button
+              type="button"
+              onClick={() => setAllowDownload(false)}
+              className={`relative flex flex-col gap-3 rounded-xl border p-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-400 ${
+                !allowDownload
+                  ? "border-maroon-400 bg-maroon-50 ring-1 ring-maroon-300 shadow-sm"
+                  : "border-maroon-100 bg-white hover:border-maroon-200 hover:bg-parchment-50"
+              }`}
+            >
+              <span className={`absolute top-3 right-3 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                !allowDownload ? "border-maroon-600 bg-maroon-600" : "border-maroon-200 bg-white"
+              }`}>
+                {!allowDownload && <span className="w-1.5 h-1.5 rounded-full bg-white block" />}
+              </span>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                !allowDownload ? "bg-maroon-100" : "bg-parchment-100"
+              }`}>
+                <Lock size={14} className={!allowDownload ? "text-maroon-700" : "text-maroon-400"} />
+              </div>
+              <div>
+                <p className={`text-xs font-semibold ${!allowDownload ? "text-maroon-800" : "text-maroon-500"}`}>
+                  Restricted Access
+                </p>
+                <p className="text-[10px] text-maroon-400 mt-0.5 leading-snug">
+                  Readers must request your permission before they can access the PDF.
+                </p>
+              </div>
+            </button>
+
+            {/* Open Access */}
+            <button
+              type="button"
+              onClick={() => setAllowDownload(true)}
+              className={`relative flex flex-col gap-3 rounded-xl border p-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-upgreen-400 ${
+                allowDownload
+                  ? "border-upgreen-400 bg-upgreen-50 ring-1 ring-upgreen-300 shadow-sm"
+                  : "border-maroon-100 bg-white hover:border-maroon-200 hover:bg-parchment-50"
+              }`}
+            >
+              <span className={`absolute top-3 right-3 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                allowDownload ? "border-upgreen-600 bg-upgreen-600" : "border-maroon-200 bg-white"
+              }`}>
+                {allowDownload && <span className="w-1.5 h-1.5 rounded-full bg-white block" />}
+              </span>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                allowDownload ? "bg-upgreen-100" : "bg-parchment-100"
+              }`}>
+                <Globe size={14} className={allowDownload ? "text-upgreen-700" : "text-maroon-400"} />
+              </div>
+              <div>
+                <p className={`text-xs font-semibold ${allowDownload ? "text-upgreen-800" : "text-maroon-500"}`}>
+                  Open Access
+                </p>
+                <p className="text-[10px] text-maroon-400 mt-0.5 leading-snug">
+                  Anyone can freely view and download the full PDF once published.
+                </p>
+              </div>
+            </button>
+          </div>
+
+          {/* Contextual note */}
+          <div className={`flex items-start gap-2 rounded-lg px-3 py-2.5 text-[10px] leading-relaxed border transition-colors duration-200 ${
+            allowDownload
+              ? "bg-upgreen-50 border-upgreen-100 text-upgreen-700"
+              : "bg-parchment-100 border-maroon-100 text-maroon-500"
+          }`}>
+            {allowDownload
+              ? <Globe size={11} className="mt-px flex-shrink-0 text-upgreen-600" />
+              : <ShieldCheck size={11} className="mt-px flex-shrink-0 text-maroon-500" />
+            }
+            <span>
+              {allowDownload
+                ? "Your PDF will be publicly downloadable once a faculty member approves your submission."
+                : "Readers will see your title and abstract, but must send you an access request to read the full PDF. You can approve or deny requests from your submissions dashboard."
+              }
+            </span>
+          </div>
         </Section>
 
         {/* Notice */}

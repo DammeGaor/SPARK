@@ -14,12 +14,16 @@ export default async function SubmissionsPage() {
   const { data: studies } = await supabase
     .from("studies")
     .select(`
-      id, title, abstract, status, is_published,
+      id, title, abstract, status, is_published, allow_download,
       submitted_at, updated_at, file_url, file_name,
       adviser, course, department, keywords,
       category:categories(name, color),
       validations(status, notes, reviewed_at,
         faculty:profiles!validations_faculty_id_fkey(full_name)
+      ),
+      access_requests:study_access_requests(
+        id, requester_id, status, message, created_at,
+        requester:profiles!study_access_requests_requester_id_fkey(full_name)
       )
     `)
     .eq("author_id", user.id)
@@ -33,13 +37,7 @@ export default async function SubmissionsPage() {
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/spark-logo.svg"
-                alt="SPARK"
-                width={120}
-                height={38}
-                priority
-              />
+              <Image src="/spark-logo.svg" alt="SPARK" width={120} height={38} priority />
             </Link>
             <ChevronRight size={14} className="text-maroon-300" />
             <span className="text-sm text-maroon-500 font-medium">My Submissions</span>
@@ -93,7 +91,7 @@ export default async function SubmissionsPage() {
 
       {/* List */}
       <div className="max-w-3xl mx-auto px-6 py-10">
-        <SubmissionsList studies={studies ?? []} />
+        <SubmissionsList studies={(studies ?? []) as any} />
       </div>
     </div>
   );

@@ -44,7 +44,7 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
   const isAuthor = user?.id === (study.author as any)?.id;
 
   // Check if user has an approved access request (only needed if download is restricted)
-  let accessRequestStatus: "none" | "pending" | "approved" | "denied" = "none";
+  let accessRequestStatus = "none" as "none" | "pending" | "approved" | "denied";
   if (!study.allow_download && user && !isAuthor) {
     const { data: req } = await supabase
       .from("study_access_requests")

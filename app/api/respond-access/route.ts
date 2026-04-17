@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     if (!accessReq) return NextResponse.json({ error: "Request not found" }, { status: 404 });
 
-    const study = accessReq.study as { id: string; title: string; author_id: string } | null;
+    const study = accessReq.study as unknown as { id: string; title: string; author_id: string } | null;
     if (!study) return NextResponse.json({ error: "Study not found" }, { status: 404 });
     if (study.author_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 

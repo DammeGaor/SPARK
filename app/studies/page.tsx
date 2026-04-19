@@ -39,6 +39,16 @@ export default async function StudiesPage({
     .select("id, name, slug, color")
     .order("name");
 
+  // If there's a search query, find matching author IDs first
+  let matchingAuthorIds: string[] = [];
+  if (sp.query) {
+    const { data: matchingAuthors } = await supabase
+      .from("profiles")
+      .select("id")
+      .ilike("full_name", `%${sp.query}%`);
+    matchingAuthorIds = (matchingAuthors ?? []).map((a) => a.id);
+  }
+
   // Build query
   let query = supabase
     .from("studies")
@@ -51,11 +61,17 @@ export default async function StudiesPage({
     `)
     .eq("is_published", true);
 
-  // Search
+  // Search — include author_id match alongside title/abstract/adviser
   if (sp.query) {
-    query = query.or(
-      `title.ilike.%${sp.query}%,abstract.ilike.%${sp.query}%,adviser.ilike.%${sp.query}%`
-    );
+    const orClauses = [
+      `title.ilike.%${sp.query}%`,
+      `abstract.ilike.%${sp.query}%`,
+      `adviser.ilike.%${sp.query}%`,
+    ];
+    if (matchingAuthorIds.length > 0) {
+      orClauses.push(`author_id.in.(${matchingAuthorIds.join(",")})`);
+    }
+    query = query.or(orClauses.join(","));
   }
 
   // Category filter

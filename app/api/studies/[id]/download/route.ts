@@ -38,13 +38,12 @@ export async function GET(
     }
   }
 
-  // Fire notification in background — don't block the file response
-  if (!isAuthor) {
-    notifyAuthor(id, study, author, user, "study_download").catch(console.error);
-  }
-
-  // Proxy the file as attachment (forces browser download)
-  const fileRes = await fetch(study.file_url);
+  // Run notification and file fetch in parallel — await both before responding
+  // (fire-and-forget gets killed by Next.js when the response closes)
+  const [fileRes] = await Promise.all([
+    fetch(study.file_url),
+    isAuthor ? Promise.resolve() : notifyAuthor(id, study, author, user, "study_download").catch(console.error),
+  ]);
   if (!fileRes.ok) {
     return NextResponse.json({ error: "File fetch failed" }, { status: 502 });
   }

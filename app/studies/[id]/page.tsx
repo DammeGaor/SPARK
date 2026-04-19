@@ -40,7 +40,6 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
 
   const fileSizeMB = study.file_size_bytes ? (study.file_size_bytes / 1024 / 1024).toFixed(2) : null;
 
-  // Determine file access for the current viewer
   const isAuthor = user?.id === (study.author as any)?.id;
 
   // Check if user has an approved access request (only needed if download is restricted)
@@ -55,11 +54,11 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
     if (req) accessRequestStatus = req.status as typeof accessRequestStatus;
   }
 
-  // Can view the PDF?
+  // Can view/download the PDF?
   const canViewPDF = study.file_url && (
-    study.allow_download ||   // open access
-    isAuthor ||               // author always can
-    accessRequestStatus === "approved"  // granted access
+    study.allow_download ||
+    isAuthor ||
+    accessRequestStatus === "approved"
   );
 
   const { data: commentsData } = await supabase
@@ -196,7 +195,8 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
                 </div>
 
                 {canViewPDF ? (
-                  <ViewPDFButton fileUrl={study.file_url} studyId={study.id} />
+                  // Only pass studyId — raw fileUrl is never sent to the client
+                  <ViewPDFButton studyId={study.id} />
                 ) : (
                   <RequestAccessButton
                     studyId={study.id}

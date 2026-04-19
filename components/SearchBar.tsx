@@ -1,15 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, SlidersHorizontal, ChevronDown, X } from "lucide-react";
-
-const CATEGORIES = [
-  { name: "Computer Science", slug: "computer-science" },
-  { name: "Natural Sciences", slug: "natural-sciences" },
-  { name: "Social Sciences", slug: "social-sciences" },
-  { name: "Education", slug: "education" },
-];
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: 15 }, (_, i) => CURRENT_YEAR - i);
@@ -21,6 +14,15 @@ export default function SearchBar() {
   const [category, setCategory] = useState("");
   const [yearFrom, setYearFrom] = useState("");
   const [yearTo, setYearTo] = useState("");
+
+  const [categories, setCategories] = useState<{ name: string; slug: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((data) => setCategories(data ?? []))
+      .catch(() => {});
+  }, []);
 
   const hasFilters = category || yearFrom || yearTo;
 
@@ -117,7 +119,7 @@ export default function SearchBar() {
                   className="w-full px-3 py-2 rounded-lg border border-maroon-200 bg-parchment-50 text-maroon-800 text-sm focus:outline-none focus:ring-2 focus:ring-maroon-500 focus:border-transparent transition-all"
                 >
                   <option value="">All categories</option>
-                  {CATEGORIES.map((c) => (
+                  {categories.map((c) => (
                     <option key={c.slug} value={c.slug}>{c.name}</option>
                   ))}
                 </select>
@@ -159,7 +161,7 @@ export default function SearchBar() {
               <div className="mt-4 flex flex-wrap gap-2">
                 {category && (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-maroon-50 border border-maroon-200 text-xs text-maroon-700">
-                    {CATEGORIES.find(c => c.slug === category)?.name}
+                    {categories.find(c => c.slug === category)?.name}
                     <button type="button" onClick={() => setCategory("")} className="hover:text-maroon-900">
                       <X size={10} />
                     </button>

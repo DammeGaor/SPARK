@@ -91,6 +91,7 @@ function AccessRequestRow({ req, studyId, onUpdate }: {
   onUpdate: () => void;
 }) {
   const [loading, setLoading] = useState<"approved" | "denied" | null>(null);
+  const [currentStatus, setCurrentStatus] = useState(req.status);
 
   async function respond(decision: "approved" | "denied") {
     setLoading(decision);
@@ -102,7 +103,8 @@ function AccessRequestRow({ req, studyId, onUpdate }: {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(decision === "approved" ? "Access granted." : "Request denied.");
+        toast.success(decision === "approved" ? "Access granted." : "Access revoked.");
+        setCurrentStatus(decision);
         onUpdate();
       } else {
         toast.error("Something went wrong.");
@@ -121,7 +123,7 @@ function AccessRequestRow({ req, studyId, onUpdate }: {
           {new Date(req.created_at).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}
         </p>
       </div>
-      {req.status === "pending" ? (
+      {currentStatus === "pending" ? (
         <div className="flex gap-1.5 flex-shrink-0">
           <button onClick={() => respond("approved")} disabled={!!loading}
             className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-upgreen-50 border border-upgreen-200 text-xs text-upgreen-700 font-medium hover:bg-upgreen-100 transition-all disabled:opacity-50">
@@ -135,13 +137,31 @@ function AccessRequestRow({ req, studyId, onUpdate }: {
           </button>
         </div>
       ) : (
-        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-          req.status === "approved"
-            ? "bg-upgreen-50 text-upgreen-700 border border-upgreen-200"
-            : "bg-red-50 text-red-600 border border-red-200"
-        }`}>
-          {req.status === "approved" ? "Approved" : "Denied"}
-        </span>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+            currentStatus === "approved"
+              ? "bg-upgreen-50 text-upgreen-700 border border-upgreen-200"
+              : "bg-red-50 text-red-600 border border-red-200"
+          }`}>
+            {currentStatus === "approved" ? "Approved" : "Denied"}
+          </span>
+          {/* Toggle to opposite state */}
+          <button
+            onClick={() => respond(currentStatus === "approved" ? "denied" : "approved")}
+            disabled={!!loading}
+            title={currentStatus === "approved" ? "Revoke access" : "Grant access"}
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[10px] font-medium transition-all disabled:opacity-50 ${
+              currentStatus === "approved"
+                ? "border-red-200 text-red-500 hover:bg-red-50"
+                : "border-upgreen-200 text-upgreen-700 hover:bg-upgreen-50"
+            }`}>
+            {loading
+              ? <Loader2 size={10} className="animate-spin" />
+              : currentStatus === "approved"
+                ? <><XCircle size={10} /> Revoke</>
+                : <><CheckCircle2 size={10} /> Grant</>}
+          </button>
+        </div>
       )}
     </div>
   );

@@ -141,16 +141,16 @@ export default function RegisterPage() {
           )}
         </div>
 
-        {/* Department + Student ID */}
+        {/* Institute + Student ID */}
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="department" className="block text-sm font-medium text-maroon-700 mb-1.5">
-              Department
+              Institute
             </label>
             <input
               id="department"
               type="text"
-              placeholder="e.g. DCSC"
+              placeholder="IMSP"
               {...register("department")}
               className="w-full px-4 py-2.5 rounded-lg border border-maroon-200 bg-white text-maroon-900
                 placeholder-maroon-300 text-sm

@@ -1,33 +1,43 @@
 import Image from "next/image";
 import Link from "next/link";
-import { GraduationCap, FlaskConical, Cpu, Globe, ArrowRight, Upload, BookMarked } from "lucide-react";
+import { BookOpen, ArrowRight, Upload, BookMarked } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import SearchBar from "@/components/SearchBar";
 import NavbarUserMenu from "@/components/NavbarUserMenu";
 
-const CATEGORIES = [
-  { name: "Computer Science", slug: "computer-science", icon: Cpu, color: "#8f1535", count: 24 },
-  { name: "Natural Sciences", slug: "natural-sciences", icon: FlaskConical, color: "#2E7D32", count: 18 },
-  { name: "Social Sciences", slug: "social-sciences", icon: Globe, color: "#5a0c1c", count: 31 },
-  { name: "Education", slug: "education", icon: GraduationCap, color: "#6b0f24", count: 15 },
-];
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  color: string;
+  count: number;
+}
 
 async function getPageData() {
   try {
     const supabase = await createClient();
 
-    const [studiesRes, userRes] = await Promise.all([
+    const [studiesRes, userRes, categoriesRes, authorData] = await Promise.all([
       supabase.from("studies").select("*", { count: "exact", head: true }).eq("is_published", true),
       supabase.auth.getUser(),
+      supabase.from("categories").select("id, name, slug, color").order("name"),
+      supabase.from("studies").select("author_id").eq("is_published", true),
     ]);
 
-// Count unique authors from published studies
-const { data: authorData } = await supabase
-  .from("studies")
-  .select("author_id")
-  .eq("is_published", true);
+    const uniqueAuthors = new Set(authorData.data?.map((s) => s.author_id) ?? []).size;
 
-const uniqueAuthors = new Set(authorData?.map((s) => s.author_id) ?? []).size;
+    // Fetch per-category study counts
+    const rawCategories = categoriesRes.data ?? [];
+    const categories: Category[] = await Promise.all(
+      rawCategories.map(async (cat) => {
+        const { count } = await supabase
+          .from("studies")
+          .select("*", { count: "exact", head: true })
+          .eq("is_published", true)
+          .eq("category_id", cat.id);
+        return { ...cat, count: count ?? 0 };
+      })
+    );
 
     let profile = null;
     if (userRes.data.user) {
@@ -41,16 +51,17 @@ const uniqueAuthors = new Set(authorData?.map((s) => s.author_id) ?? []).size;
 
     return {
       studies: studiesRes.count ?? 0,
-      authors: uniqueAuthors,  // ← changed from authorsRes.count
+      authors: uniqueAuthors,
+      categories,
       profile,
     };
   } catch {
-    return { studies: 0, authors: 0, profile: null };
+    return { studies: 0, authors: 0, categories: [], profile: null };
   }
 }
 
 export default async function HomePage() {
-  const { studies, authors, profile } = await getPageData();
+  const { studies, authors, categories, profile } = await getPageData();
 
   return (
     <div className="min-h-screen bg-parchment-50 flex flex-col relative">
@@ -167,7 +178,7 @@ export default async function HomePage() {
           </div>
           <div className="w-px h-10 bg-maroon-100" />
           <div className="text-center">
-            <p className="font-serif text-3xl font-bold text-maroon-800">{CATEGORIES.length}</p>
+            <p className="font-serif text-3xl font-bold text-maroon-800">{categories.length}</p>
             <p className="text-xs text-maroon-400 mt-0.5 tracking-wide uppercase">Research Categories</p>
           </div>
         </div>
@@ -177,7 +188,7 @@ export default async function HomePage() {
       <section className="relative z-10 max-w-6xl mx-auto px-6 py-16 w-full">
         <div className="flex items-end justify-between mb-8">
           <div>
-            <p className="text-xs text-maroon-400 tracking-widest uppercase mb-2">Explore by Field</p>
+            <p className="text-xs text-maroon-400 tracking-widest uppercase mb-2">Explore by Category</p>
             <h2 className="font-serif text-3xl text-maroon-800 font-bold">Discover Sources</h2>
           </div>
           <Link href="/studies"
@@ -188,35 +199,32 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            return (
-              <Link
-                key={cat.slug}
-                href={`/studies?category=${cat.slug}`}
-                className="group relative bg-white rounded-2xl border border-maroon-100 p-6 hover:border-maroon-300 hover:shadow-lg transition-all duration-200 overflow-hidden"
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {categories.map((cat) => (
+            <Link
+              key={cat.slug}
+              href={`/studies?category=${cat.slug}`}
+              className="group relative bg-white rounded-2xl border border-maroon-100 p-6 hover:border-maroon-300 hover:shadow-lg transition-all duration-200 overflow-hidden"
+            >
+              <div
+                className="absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-5 group-hover:opacity-10 transition-opacity"
+                style={{ background: cat.color }}
+              />
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 shadow-sm"
+                style={{ background: `${cat.color}15`, border: `1.5px solid ${cat.color}30` }}
               >
-                <div
-                  className="absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-5 group-hover:opacity-10 transition-opacity"
-                  style={{ background: cat.color }}
-                />
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 shadow-sm"
-                  style={{ background: `${cat.color}15`, border: `1.5px solid ${cat.color}30` }}
-                >
-                  <Icon size={20} style={{ color: cat.color }} />
-                </div>
-                <h3 className="font-serif text-base font-semibold text-maroon-800 mb-1 leading-tight">
-                  {cat.name}
-                </h3>
-                <p className="text-xs text-maroon-400">{cat.count} studies</p>
-                <div className="mt-4 flex items-center gap-1 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: cat.color }}>
-                  Explore <ArrowRight size={11} />
-                </div>
-              </Link>
-            );
-          })}
+                <BookOpen size={20} style={{ color: cat.color }} />
+              </div>
+              <h3 className="font-serif text-base font-semibold text-maroon-800 mb-1 leading-tight">
+                {cat.name}
+              </h3>
+              <p className="text-xs text-maroon-400">{cat.count} {cat.count === 1 ? "study" : "studies"}</p>
+              <div className="mt-4 flex items-center gap-1 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: cat.color }}>
+                Explore <ArrowRight size={11} />
+              </div>
+            </Link>
+          ))}
         </div>
 
         <div className="mt-4 sm:hidden text-center">

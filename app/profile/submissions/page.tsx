@@ -33,7 +33,7 @@ export default async function SubmissionsPage() {
     <div className="min-h-screen bg-parchment-50">
 
       {/* Header */}
-      <div className="border-b border-maroon-100 bg-white sticky top-0 z-10">
+      <div className="border-b border-maroon-100 bg-white sticky top-0 z-50">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2">
@@ -49,15 +49,15 @@ export default async function SubmissionsPage() {
       </div>
 
       {/* Hero */}
-      <div className="relative overflow-hidden"
+      <div className="relative"
         style={{ background: "linear-gradient(160deg, #6b0f24 0%, #8f1535 60%, #5a0c1c 100%)" }}>
-        <div className="absolute inset-0 opacity-10"
+        <div className="absolute inset-0 opacity-10 z-0"
           style={{
             backgroundImage: "radial-gradient(circle at 1px 1px, #faf3e0 1px, transparent 0)",
             backgroundSize: "28px 28px",
           }} />
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-upgreen-500" />
-        <div className="relative z-10 max-w-3xl mx-auto px-6 py-10">
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-upgreen-500 z-0" />
+        <div className="relative z-10 max-w-3xl mx-auto px-6 py-10 overflow-hidden">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center border border-parchment-300/20"
               style={{ background: "rgba(250,243,224,0.1)" }}>

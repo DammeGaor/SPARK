@@ -36,7 +36,7 @@ export default async function StudiesPage({
   // Fetch categories for filter dropdown
   const { data: categories } = await supabase
     .from("categories")
-    .select("id, name, color")
+    .select("id, name, slug, color")
     .order("name");
 
   // Build query
@@ -60,9 +60,7 @@ export default async function StudiesPage({
 
   // Category filter
   if (sp.category) {
-    const cat = categories?.find(
-      (c) => c.name.toLowerCase().replace(/\s+/g, "-") === sp.category
-    );
+    const cat = categories?.find((c) => c.slug === sp.category);
     if (cat) query = query.eq("category_id", cat.id);
   }
 

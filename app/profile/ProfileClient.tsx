@@ -319,10 +319,10 @@ export default function ProfileClient({ profile, submissionsCount, publishedCoun
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-maroon-600 mb-1.5">
-                  <Building2 size={11} className="inline mr-1" /> Department
+                  <Building2 size={11} className="inline mr-1" /> Institute
                 </label>
                 <input value={department} onChange={(e) => setDepartment(e.target.value)}
-                  placeholder="e.g. DCSC" className={inputCls} />
+                  placeholder="e.g. IMSP" className={inputCls} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-maroon-600 mb-1.5">

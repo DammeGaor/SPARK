@@ -117,7 +117,18 @@ function SubmitForm() {
 
       // Fetch categories
       const { data } = await supabase.from("categories").select("id, name, color").order("name");
-      if (data) setCategories(data);
+      if (data && data.length > 0) {
+        setCategories(data);
+      } else {
+        // Fallback to defaults if DB has no categories yet
+        setCategories([
+          { id: "1", name: "Learning Materials & Manipulatives", color: "#8f1535" },
+          { id: "2", name: "Teaching Strategies & Practice", color: "#2E7D32" },
+          { id: "3", name: "Student Outcomes & Perceptions", color: "#1565C0" },
+          { id: "4", name: "Curriculum & Instructional Design", color: "#6A1B9A" },
+          { id: "5", name: "Scholarly Reviews & Research Synthesis", color: "#E65100" },
+        ]);
+      }
     }
     init();
   }, [router]);
@@ -145,11 +156,6 @@ function SubmitForm() {
 
   // Submit
   async function onSubmit(data: SubmitInput) {
-    if (!pdfFile) {
-      setPdfError("Please upload your study as a PDF.");
-      return;
-    }
-
     setIsSubmitting(true);
     setUploadProgress(0);
 
@@ -158,26 +164,33 @@ function SubmitForm() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // 1. Upload PDF to storage
-      setUploadProgress(20);
-      const fileExt = "pdf";
-      const fileName = `${user.id}/${Date.now()}-${pdfFile.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      let fileUrl: string | null = null;
+      let fileName: string | null = null;
+      let fileSizeBytes: number | null = null;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("study-files")
-        .upload(fileName, pdfFile, { cacheControl: "3600", upsert: false });
+      // 1. Upload PDF to storage (optional)
+      if (pdfFile) {
+        setUploadProgress(20);
+        const uploadName = `${user.id}/${Date.now()}-${pdfFile.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 
-      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
-      setUploadProgress(60);
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("study-files")
+          .upload(uploadName, pdfFile, { cacheControl: "3600", upsert: false });
 
-      // 2. Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from("study-files")
-        .getPublicUrl(uploadData.path);
+        if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("study-files")
+          .getPublicUrl(uploadData.path);
+
+        fileUrl = publicUrl;
+        fileName = pdfFile.name;
+        fileSizeBytes = pdfFile.size;
+      }
 
       setUploadProgress(80);
 
-      // 3. Insert study record
+      // 2. Insert study record
       const keywords = data.keywords.split(",").map((k) => k.trim()).filter(Boolean);
 
       const { error: insertError } = await supabase.from("studies").insert({
@@ -192,9 +205,9 @@ function SubmitForm() {
         course: data.course.trim(),
         department: data.department.trim(),
         category_id: data.category_id,
-        file_url: publicUrl,
-        file_name: pdfFile.name,
-        file_size_bytes: pdfFile.size,
+        file_url: fileUrl,
+        file_name: fileName,
+        file_size_bytes: fileSizeBytes,
         author_id: user.id,
         status: "pending",
         is_published: false,
@@ -250,10 +263,10 @@ function SubmitForm() {
 
   // ── Form ─────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-parchment-50">
+    <div className="min-h-screen bg-parchment-50 flex flex-col">
 
       {/* Header */}
-      <div className="border-b border-maroon-100 bg-white sticky top-0 z-10">
+      <div className="border-b border-maroon-100 bg-white fixed top-0 left-0 right-0 z-50">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <a href="/" className="flex items-center gap-2 group">
@@ -271,6 +284,9 @@ function SubmitForm() {
           </a>
         </div>
       </div>
+
+      {/* Spacer for fixed header */}
+      <div className="h-[57px]" />
 
       {/* Hero */}
       <div className="relative overflow-hidden"
@@ -299,7 +315,7 @@ function SubmitForm() {
             hint="Enter the full title of your special problem or research.">
             <input
               {...register("title")}
-              placeholder="e.g. Development of a Machine Learning Model for..."
+              placeholder="e.g. Effectiveness of Inquiry-Based Learning in Teaching Calculus to..."
               className={inputCls}
             />
           </Field>
@@ -309,7 +325,7 @@ function SubmitForm() {
             <textarea
               {...register("abstract")}
               rows={6}
-              placeholder="Provide a comprehensive summary of your research, including objectives, methodology, and findings..."
+              placeholder="Provide a comprehensive summary of your research, including objectives, methodology, and findings. For BS MST studies, consider mentioning your target grade level and subject area."
               className={`${inputCls} resize-none leading-relaxed`}
             />
           </Field>
@@ -347,19 +363,19 @@ function SubmitForm() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <Field label="Course" error={errors.course?.message} required
-              hint="e.g. BS Computer Science">
+              hint="e.g. BS Mathematics and Science Teaching">
               <input
                 {...register("course")}
-                placeholder="e.g. BS Computer Science"
+                placeholder="BS Mathematics and Science Teaching"
                 className={inputCls}
               />
             </Field>
 
-            <Field label="Department" error={errors.department?.message} required
-              hint="e.g. DCSC, DMATH">
+            <Field label="Institute" error={errors.department?.message} required
+              hint="e.g. IMSP">
               <input
                 {...register("department")}
-                placeholder="e.g. Department of Computer Science"
+                placeholder="Institute of Mathematics, Science and Technology Education"
                 className={inputCls}
               />
             </Field>
@@ -372,7 +388,7 @@ function SubmitForm() {
             hint={`${keywordCount} keyword${keywordCount !== 1 ? "s" : ""} · separate with commas · minimum 3`}>
             <input
               {...register("keywords")}
-              placeholder="e.g. machine learning, neural networks, image classification"
+              placeholder="e.g. mathematics education, inquiry-based learning, student engagement"
               className={inputCls}
             />
           </Field>
@@ -394,14 +410,17 @@ function SubmitForm() {
             <textarea
               {...register("citation")}
               rows={3}
-              placeholder="e.g. dela Cruz, J. (2024). Title of study. University of the Philippines."
+              placeholder="e.g. Santos, M. A. (2024). Title of study. University of the Philippines Los Baños."
               className={`${inputCls} resize-none`}
             />
           </Field>
         </Section>
 
         {/* PDF Upload */}
-        <Section icon={FileText} title="Study File">
+        <Section icon={FileText} title="Study File (Optional)">
+          <p className="text-xs text-maroon-400 -mt-1 leading-relaxed">
+            You may attach the PDF of your study now or submit it later from your submissions dashboard.
+          </p>
           <div
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}
@@ -568,7 +587,7 @@ function SubmitForm() {
         {isSubmitting && uploadProgress > 0 && (
           <div className="space-y-2">
             <div className="flex justify-between text-xs text-maroon-500">
-              <span>{uploadProgress < 60 ? "Uploading PDF..." : uploadProgress < 90 ? "Saving study..." : "Finalizing..."}</span>
+              <span>{uploadProgress < 80 ? "Uploading PDF..." : uploadProgress < 100 ? "Saving study..." : "Finalizing..."}</span>
               <span>{uploadProgress}%</span>
             </div>
             <div className="h-1.5 bg-maroon-100 rounded-full overflow-hidden">

@@ -44,7 +44,7 @@ export default function AuthLayout({
         <div className="relative z-10">
           <div className="w-10 h-0.5 bg-upgreen-400 mb-6" />
           <blockquote className="font-serif text-2xl text-parchment-100 leading-relaxed mb-5">
-            "Honor and Excellence in the Service of the Nation!"
+            "Honor and Excellence in the Service of the Nation"
           </blockquote>
           <cite className="text-parchment-400 text-xs not-italic tracking-widest uppercase">
             University of the Philippines
